@@ -1,10 +1,19 @@
 #[macro_use]
 extern crate glium;
+extern crate notify;
 
-use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+
+use notify::{RecommendedWatcher, Watcher};
+use std::sync::mpsc::{channel, TryRecvError};
+
+fn string_from_file(mut file: &std::fs::File) -> String {
+    let mut src = String::new();
+    file.read_to_string(&mut src).unwrap();
+    src
+}
 
 fn main() {
     use glium::{DisplayBuild, Surface};
@@ -38,30 +47,25 @@ fn main() {
     // Read fragment shader from file
     let fragment_shader_path = Path::new("shader.frag");
     let fragment_shader_path_display = fragment_shader_path.display();
-    let mut fragment_shader_file = match File::open(&fragment_shader_path) {
-        Err(why) => {
-            panic!("Couldn't open {}: {}",
-                   fragment_shader_path_display,
-                   Error::description(&why))
-        }
-        Ok(f) => f,
-    };
-    let mut fragment_shader_src = String::new();
-    match fragment_shader_file.read_to_string(&mut fragment_shader_src) {
-        Err(why) => {
-            panic!("Couldn't read {}: {}",
-                   fragment_shader_path_display,
-                   Error::description(&why))
-        }
+    let mut fragment_shader_file = File::open(&fragment_shader_path).unwrap();
+    let mut fragment_shader_src = string_from_file(&fragment_shader_file);
+    let mut program = glium::Program::from_source(&display,
+                                                  vertex_shader_src,
+                                                  &fragment_shader_src,
+                                                  None)
+                          .unwrap();
+
+    // rsnotify boilerplate to watch the fragment shader file
+    let (tx, rx) = channel();
+    let mut fragment_shader_watcher: RecommendedWatcher = Watcher::new(tx).unwrap();
+    let _ = match fragment_shader_watcher.watch(fragment_shader_path) {
         Ok(_) => (),
-    }
-
-    let program = glium::Program::from_source(&display,
-                                              vertex_shader_src,
-                                              &fragment_shader_src,
-                                              None)
-                      .unwrap();
-
+        Err(e) => {
+            panic!("Error watching file {}: {}",
+                   fragment_shader_path_display,
+                   e)
+        }
+    };
     loop {
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
@@ -77,6 +81,33 @@ fn main() {
             match ev {
                 glium::glutin::Event::Closed => return,
                 _ => (),
+            }
+        }
+        match rx.try_recv() {
+            Ok(o) => {
+                fragment_shader_file = File::open(&fragment_shader_path).unwrap();
+                fragment_shader_src = string_from_file(&fragment_shader_file);
+                program = match glium::Program::from_source(&display,
+                                                            vertex_shader_src,
+                                                            &fragment_shader_src,
+                                                            None) {
+                    Ok(p) => p,
+                    // In the error case, we print the error message
+                    // and return the original program
+                    Err(e) => {
+                        println!("Error compiling program {}", e);
+                        program
+                    }
+                }
+            }
+            Err(e) => {
+                match e {
+                    TryRecvError::Empty => (),
+                    TryRecvError::Disconnected => {
+                        panic!("Channel for {} watch disconnected",
+                               fragment_shader_path_display)
+                    }
+                }
             }
         }
     }

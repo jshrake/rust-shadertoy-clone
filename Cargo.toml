@@ -5,3 +5,4 @@ authors = ["jshrake <justinshrake@gmail.com>"]
 
 [dependencies]
 glium = "*"
+notify = "^2.5.0"

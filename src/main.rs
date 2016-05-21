@@ -1,6 +1,11 @@
 #[macro_use]
 extern crate glium;
 
+use std::error::Error;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
+
 fn main() {
     use glium::{DisplayBuild, Surface};
     let display = glium::glutin::WindowBuilder::new().build_glium().unwrap();
@@ -30,17 +35,30 @@ fn main() {
         }
     "#;
 
-    let fragment_shader_src = r#"
-        #version 140
-        out vec4 color;
-        void main() {
-            color = vec4(0.416, 0.353, 0.804, 1.0);
+    // Read fragment shader from file
+    let fragment_shader_path = Path::new("shader.frag");
+    let fragment_shader_path_display = fragment_shader_path.display();
+    let mut fragment_shader_file = match File::open(&fragment_shader_path) {
+        Err(why) => {
+            panic!("Couldn't open {}: {}",
+                   fragment_shader_path_display,
+                   Error::description(&why))
         }
-    "#;
+        Ok(f) => f,
+    };
+    let mut fragment_shader_src = String::new();
+    match fragment_shader_file.read_to_string(&mut fragment_shader_src) {
+        Err(why) => {
+            panic!("Couldn't read {}: {}",
+                   fragment_shader_path_display,
+                   Error::description(&why))
+        }
+        Ok(_) => (),
+    }
 
     let program = glium::Program::from_source(&display,
                                               vertex_shader_src,
-                                              fragment_shader_src,
+                                              &fragment_shader_src,
                                               None)
                       .unwrap();
 

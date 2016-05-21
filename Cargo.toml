@@ -1,0 +1,7 @@
+[package]
+name = "pixrs"
+version = "0.1.0"
+authors = ["jshrake <justinshrake@gmail.com>"]
+
+[dependencies]
+glium = "*"

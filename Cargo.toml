@@ -1,8 +1,9 @@
 [package]
-name = "pixrs"
+name = "shdrs"
 version = "0.1.0"
-authors = ["jshrake <justinshrake@gmail.com>"]
+authors = ["Justin Shrake <justinshrake@gmail.com>"]
 
 [dependencies]
 glium = "*"
 notify = "^2.5.0"
+time = "0.1"

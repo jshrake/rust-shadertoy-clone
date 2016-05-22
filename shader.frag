@@ -1,5 +1,3 @@
-#version 140
-out vec4 color;
-void main() {
-    color = vec4(0.416, 0.353, 0.804, 1.0);
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+  fragColor = vec4(1.0, 0.0, 1.0, 1.0);
 }

@@ -1,0 +1,54 @@
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Config {
+    #[serde(rename="Shader")]
+    pub shader: Shader,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Shader {
+    pub info: ShaderInfo,
+    pub renderpass: Vec<ShaderRenderpass>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ShaderInfo {
+    pub description: String,
+    pub name: String,
+    #[serde(rename="username")]
+    pub author: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ShaderRenderpass {
+    pub name: String,
+    pub code: String,
+    #[serde(rename="type")]
+    pub kind: String,
+    pub description: String,
+    pub inputs: Vec<ShaderInput>,
+    pub outputs: Vec<ShaderOutput>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ShaderInput {
+    pub channel: i32,
+    pub ctype: String,
+    pub id: i32,
+    pub src: String,
+    pub sampler: TextureSampler,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ShaderOutput {
+    pub channel: i32,
+    pub id: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TextureSampler {
+    pub filter: String,
+    pub internal: String,
+    pub srgb: bool,
+    pub vflip: bool,
+    pub wrap: String,
+}

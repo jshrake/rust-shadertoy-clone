@@ -4,6 +4,7 @@ use std::path::Path;
 
 use glium;
 use time;
+use shadertoy_config;
 use notify::{RecommendedWatcher, Watcher};
 use std::sync::mpsc::{channel, TryRecvError};
 
@@ -14,33 +15,22 @@ fn string_from_file(mut file: &File) -> String {
 }
 
 fn shadertoy_fragment_shader(src: &str) -> String {
-    let header = r#"
-        #version 140
-        uniform vec3 iResolution;
-        uniform float iGlobalTime;
-        uniform float iTimeDelta;
-        uniform float iGlobalFrame;
-        uniform vec4 iMouse;
-        out vec4 fragColor;
-    "#;
-    let footer = r#"
-        void main() {
-            mainImage(fragColor, gl_FragCoord.xy);
-        }
-    "#;
+    let header = include_str!("templates/shadertoy/header.glsl");
+    let footer = include_str!("templates/shadertoy/footer.glsl");
     format!("{header}\n{src}\n{footer}",
             header = header,
             src = src,
             footer = footer)
 }
 
-pub fn execute(fragment_shader_path: &Path) {
+pub fn execute(config: shadertoy_config::Config) {
+    let fragment_shader_path = Path::new(&config.shader.renderpass[0].code);
     use glium::{DisplayBuild, Surface};
     let display = glium::glutin::WindowBuilder::new()
-                      .with_title("shdrs")
-                      .with_vsync()
-                      .build_glium()
-                      .unwrap();
+        .with_title(config.shader.info.name)
+        .with_vsync()
+        .build_glium()
+        .unwrap();
 
     // Full-screen quad
     #[derive(Copy, Clone)]
@@ -58,15 +48,9 @@ pub fn execute(fragment_shader_path: &Path) {
     let index_buffer = glium::IndexBuffer::immutable(&display,
                                                      glium::index::PrimitiveType::TrianglesList,
                                                      &indices)
-                           .unwrap();
-    let vertex_shader_src = r#"
-        #version 140
-        in vec2 position;
-        void main() {
-            gl_Position = vec4(position, 0.0, 1.0);
-        }
-    "#;
+        .unwrap();
 
+    let vertex_shader_src = include_str!("templates/shadertoy/vertex.glsl");
     // Read fragment shader from file
     let fragment_shader_path_display = fragment_shader_path.display();
     let mut program = {
@@ -143,7 +127,6 @@ pub fn execute(fragment_shader_path: &Path) {
             let run_time = current_time - start_time;
             let u_global_time = run_time.num_milliseconds() as f32 / 1000.0;
             let u_time_delta = frame_delta.num_milliseconds() as f32 / 1000.0;
-
             uniform! {
                 iResolution: u_resolution,
                 iGlobalFrame: frame_count,
@@ -154,11 +137,11 @@ pub fn execute(fragment_shader_path: &Path) {
         };
         target.clear_color(0.0, 0.0, 0.0, 1.0);
         target.draw(&vertex_buffer,
-                    &index_buffer,
-                    &program,
-                    &uniforms,
-                    &Default::default())
-              .unwrap();
+                  &index_buffer,
+                  &program,
+                  &uniforms,
+                  &Default::default())
+            .unwrap();
         target.finish().unwrap();
         frame_count += 1;
         // Update mouse state

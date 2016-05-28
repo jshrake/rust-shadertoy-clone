@@ -1,0 +1,38 @@
+{
+    "Shader": {
+        "info": {
+            "description": "A wonderful shdrs project",
+            "name": "{{SHDRS_PROJECT_NAME}}",
+            "username": "{{SHDRS_PROJECT_AUTHOR}}"
+        },
+        "renderpass": [
+            {
+                "name": "Image",
+                "code": "image.glsl",
+                "type": "image",
+                "description": "",
+                "inputs": [
+                    {
+                        "channel": 0,
+                        "ctype": "texture",
+                        "id": 7,
+                        "sampler": {
+                            "filter": "mipmap",
+                            "internal": "byte",
+                            "srgb": "false",
+                            "vflip": "false",
+                            "wrap": "repeat"
+                        },
+                        "src": "/presets/tex06.jpg"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "channel": 0,
+                        "id": 37
+                    }
+                ]
+            }
+        ]
+    }
+}

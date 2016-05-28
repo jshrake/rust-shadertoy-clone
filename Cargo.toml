@@ -2,8 +2,17 @@
 name = "shdrs"
 version = "0.1.0"
 authors = ["Justin Shrake <justinshrake@gmail.com>"]
+build = "build.rs"
+
+[build-dependencies]
+serde_codegen = "*"
+syntex = "*"
 
 [dependencies]
 glium = "*"
-notify = "^2.5.0"
-time = "0.1"
+notify = "*"
+time = "*"
+clap = "*"
+serde = "*" 
+serde_json = "*" 
+
